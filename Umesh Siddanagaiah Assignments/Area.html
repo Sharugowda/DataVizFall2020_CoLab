@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Areachart</title>
+    <script src="Libs/d3.min.js"></script>
+</head>
+<body>
+    <div id="container" style="width:100%">
+        <svg width="50%" height="80%" style="background-color: #efefef"
+             viewBox="0 0 1000 500">
+        </svg>
+    </div>
+    <script>
+        let svg = d3.selectAll('svg');
+        d3.csv("data_sample.csv",d3.autoType).then
+        (
+            function (data)
+            {
+                let padding = 40;
+                let dates_min_max = d3.extent(data,function(d){return d.date;})
+                console.log(dates_min_max)
+
+                S_Color = ['gray','black','white','pink']
+                let stack = d3.stack()
+                    .keys(['EstimatedCost', 'RawMaterial', 'Workmanship','YearlyStorage']);
+                let stack1 = stack(data)
+                let scaleY = d3.scaleLinear().domain([0,d3.max(stack1,d=>d3.max(d,d=>d[1]))]).range([500-padding,padding])
+                
+                let scaleX = d3.scaleTime().domain(dates_min_max).range([padding,1000-padding])
+                let area = d3.area()
+                    .x(function(d) { return scaleX(d.data.date);})
+                    .y0(function(d) {return scaleY(d[0]);})
+                    .y1(function(d) {
+                        return scaleY(d[1]);
+                    });
+                svg.selectAll('path')
+                    .data(stack1)
+                    .enter()
+                    .append('path')
+                    .style('fill', function(d, i) {
+                        return S_Color[i];
+                    })
+                    .attr('d', area)
+                svg
+                    .append("g")
+                    .attr("transform", "translate(0,480)")      
+                    .call(d3.axisBottom( scaleX));
+                svg
+                    .append("g")
+                    .attr("transform", "translate(40,0)")
+                    .call(d3.axisLeft(scaleY));
+            }
+        )
+    </script>
+</body>
+</html>
